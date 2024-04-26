@@ -2,12 +2,7 @@ package com.Aswat.entity;
 
 import com.Aswat.enums.UserRole;
 import jakarta.persistence.*;
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.userdetails.UserDetails;
 
-import java.util.Collection;
-import java.util.List;
 
 
 @Entity
