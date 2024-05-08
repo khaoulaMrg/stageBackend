@@ -1,13 +1,14 @@
 package com.Aswat.Controllers;
 
-import com.Aswat.Dtos.AuthenticationRequest;
-import com.Aswat.Dtos.AuthenticationResponse;
-import com.Aswat.Dtos.SignupRequest;
-import com.Aswat.Dtos.UserDto;
-import com.Aswat.entity.User;
 
+import com.Aswat.Dtos.*;
+import com.Aswat.entity.Post;
+import com.Aswat.entity.User;
+import com.Aswat.reposistories.PostRepository;
 import com.Aswat.reposistories.UserRepo;
 import com.Aswat.services.jwt.AuthoSrv;
+import com.Aswat.services.jwt.FileStorageService;
+import com.Aswat.services.jwt.PostService;
 import com.Aswat.services.jwt.jwt.UserDetailsSrvImp;
 import com.Aswat.util.JwtUtil;
 import jakarta.servlet.http.HttpServletResponse;
@@ -19,17 +20,17 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-import com.Aswat.services.jwt.AuthoSrv;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+
 import java.io.IOException;
+import java.util.Date;
 import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/autho")
 public class AuthoController {
+
 
     private final AuthoSrv authoSrv;
     private final AuthenticationManager authenticationManager;
@@ -40,12 +41,17 @@ public class AuthoController {
     private final UserRepo userRepo;
 
 
-    public AuthoController(AuthoSrv authoSrv, AuthenticationManager authenticationManager, UserDetailsSrvImp userDetailsSrv, UserDetailsSrvImp userDetailsService, JwtUtil jwtUtil, UserRepo userRepo) {
+    private final PostService postService;
+
+
+    public AuthoController(AuthoSrv authoSrv, AuthenticationManager authenticationManager, UserDetailsSrvImp userDetailsSrv, UserDetailsSrvImp userDetailsService, JwtUtil jwtUtil, UserRepo userRepo, PostService postService) {
         this.authoSrv = authoSrv;
         this.authenticationManager = authenticationManager;
         this.userDetailsService = userDetailsService;
         this.jwtUtil = jwtUtil;
         this.userRepo = userRepo;
+
+        this.postService = postService;
     }
 
     @PostMapping("/signup")
@@ -80,4 +86,39 @@ public class AuthoController {
         }
         return authenticationResponse;
     }
+
+
+    @Autowired
+    private FileStorageService fileStorageService;
+
+
+
+
+
+
+
+    @PostMapping("/create")
+    public ResponseEntity<PostDTO> createPost(@ModelAttribute PostDTO postDTO,
+                                              @RequestParam("file") MultipartFile file) {
+        try {
+            // Enregistrer le fichier dans le dossier d'uploads et récupérer le chemin
+            String picPath = fileStorageService.storeFile(file);
+
+            // Définir le chemin de l'image dans le DTO
+            postDTO.setPicPath(picPath);
+
+            // Créer le post à partir du DTO et du fichier téléchargé
+            PostDTO createdPostDTO = postService.createPost(postDTO, file);
+
+            // Retourner la réponse avec le post créé
+            return ResponseEntity.ok(createdPostDTO);
+        } catch (IOException e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+
 }
+
+
+

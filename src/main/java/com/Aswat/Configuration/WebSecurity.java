@@ -35,6 +35,7 @@ public class WebSecurity {
                 .authorizeHttpRequests(request -> request
                         .requestMatchers("/api/autho/**")
                         .permitAll()
+                        .requestMatchers("/fileUpload/**").permitAll()
                         .anyRequest().authenticated())
                 .sessionManagement(management -> management.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
         ;
